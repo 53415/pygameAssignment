@@ -5,6 +5,7 @@ Program Description:
 
 -----------------------------------------------------------------------------
 References:
+https://stackoverflow.com/questions/64774900/how-to-get-velocity-x-and-y-from-angle-and-speed
 
 (put a link to your reference here but also add a comment in the code below where you used the reference)
 
@@ -45,6 +46,8 @@ Features Added Beyond Level 3 Requirements:
 '''
 
 import pygame
+import math
+
 pygame.init()
 
 # *********SETUP**********
@@ -59,9 +62,12 @@ speed = 10
 trackX = -8150 
 trackY = -6190
 trackSize = 1
-angle = 90
+angle = 0
 playerX = 500
 playerY = 300
+
+
+
 # *********GAME LOOP**********
 while True:
     # *********EVENTS**********
@@ -76,20 +82,25 @@ while True:
     screen.blit(pygame.transform.rotate(car, angle), (playerX, playerY))
     keys = pygame.key.get_pressed()
 
-    if keys[pygame.K_w]:
-        trackY += speed
-        angle+=1
 
     if keys[pygame.K_a]:
-        trackX += speed
-    if keys[pygame.K_s]:
-        trackY -= speed
-        angle-=1
+        angle+=2
 
     if keys[pygame.K_d]:
-        trackX -= speed
+        angle-=2
 
-    print(trackX,trackY)
+    angleRadians = math.radians(angle)
+    xTravelled = speed * math.cos(angleRadians)
+    yTravelled = speed * -math.sin(angleRadians)
+
+    if keys[pygame.K_w]:
+        trackX += xTravelled
+        trackY += yTravelled
+    elif keys[pygame.K_s]:
+        trackX -= xTravelled
+        trackY -= yTravelled
+
+    print(angleRadians)
     pygame.display.flip()
     clock.tick(60)
 
