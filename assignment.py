@@ -49,6 +49,8 @@ import pygame
 import math
 import os
 import time
+import random
+
 pygame.init()
 
 # *********SETUP**********
@@ -81,6 +83,16 @@ tyres = tyresG
 treads1 = pygame.image.load("treads1.png")
 treads2 = pygame.image.load("treads2.png")
 
+lights0 = pygame.transform.scale(pygame.image.load("lights0.png"), (520,560))
+lights1 = pygame.transform.scale(pygame.image.load("lights1.png"), (520,560))
+lights2 = pygame.transform.scale(pygame.image.load("lights2.png"), (520,560))
+lights3 = pygame.transform.scale(pygame.image.load("lights3.png"), (520,560))
+lights4 = pygame.transform.scale(pygame.image.load("lights4.png"), (520,560))
+lights = -1
+lightsOut = False
+lightSound = pygame.mixer.Sound(os.path.join("lightSound.mp3"))
+lightPlay = True
+
 car2 = pygame.image.load("car2.png")
 
 speed = 0
@@ -112,6 +124,9 @@ RRTW = 99
 RRTWC = tyresG
 
 i = 0
+
+lightSound.play()
+
 # *********GAME LOOP**********
 while True:
     time += clock.get_time() / 1000
@@ -157,13 +172,13 @@ while True:
 
     keys = pygame.key.get_pressed()
 
-
-    if keys[pygame.K_a]:
-        angle+=3
-        FLTW -= 0.01
-    if keys[pygame.K_d]:
-        angle-=3
-        FRTW -= 0.01
+    if lightsOut:
+        if keys[pygame.K_a]:
+            angle+=3
+            FLTW -= 0.01
+        if keys[pygame.K_d]:
+            angle-=3
+            FRTW -= 0.01
     
     # Reference #1
     angleRadians = math.radians(angle)
@@ -209,7 +224,7 @@ while True:
         if speed > 0:
             speed -= 0.1
 
-    if keys[pygame.K_w]:
+    if keys[pygame.K_w] and lightsOut:
         if speed < maxSpeed:
             speed += 0.1
         if RRTW >= 0 and RLTW >= 0:
@@ -307,20 +322,40 @@ while True:
 
     screen.blit((bahrainMinimap), (20, 550))
 
-    if i < 1:
-        screen.blit(pygame.transform.rotate(treads1, angle), (500, 300))
-        i += 0.1
-    elif i < 2:
-        screen.blit(pygame.transform.rotate(treads2, angle), (500, 300))
-        i += 0.1
-    else:
-        i = 0  
     
 
     if DRS:
         screen.blit(pygame.transform.rotate(carDRS, angle), (500, 300))
     else:
         screen.blit(pygame.transform.rotate(car, angle), (500, 300))
+    if speed > 0:
+        if i < 1:
+            screen.blit(pygame.transform.rotate(treads1, angle), (500, 300))
+            i += 0.1
+        elif i < 2:
+            screen.blit(pygame.transform.rotate(treads2, angle), (500, 300))
+            i += 0.1
+        else:
+            i = 0  
+
+    if -1 > lights <= 0:
+        screen.blit(lights0, (380, 110))
+    elif 0 > lights <= 1:
+        screen.blit(lights1, (380, 110))
+    elif 1 > lights <= 2:
+        screen.blit(lights2, (380, 110))
+    elif 2 > lights <= 3:
+        screen.blit(lights3, (380, 110))
+    elif 3 > lights <= 4:
+        screen.blit(lights4, (380, 110))
+    elif round(lights,0) >= 3:
+        lightsOut = True
+        
+    if lights <= 3:
+        lights += random.uniform(0.01, 0.02)
+    else:
+        lightsOut == True
+
 
     minimapX = trackX / -50 + 25
     minimapY = trackY / -50 + 560
