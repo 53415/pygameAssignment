@@ -99,6 +99,8 @@ lights4 = pygame.transform.scale(pygame.image.load("lights4.png"), (520,560))
 lights = -1
 lightsOut = False
 lightSound = pygame.mixer.Sound(os.path.join("lightSound.mp3"))
+awayWeGo = pygame.mixer.Sound(os.path.join("lightsout.mp3"))
+
 lightPlay = True
 
 car2 = pygame.image.load("car2.png")
@@ -117,6 +119,8 @@ lap1time = 0
 lap2time = 0
 lap3time = 0
 font = pygame.font.Font(os.path.join(script_dir, "font.otf"), 28)
+numberFont = pygame.font.Font(os.path.join(script_dir, "numbers.ttf"), 28)
+
 DRS = False
 carDRS = pygame.image.load("FerrariDRS.png")
 FLTW = 99
@@ -130,7 +134,7 @@ RLTWC = tyresG
 
 RRTW = 99
 RRTWC = tyresG
-
+tyresintact = True
 i = 0
 
 gamestate = "main"
@@ -151,6 +155,7 @@ while True:
                 if 300 < mouseX < 940 and 270 < mouseY < 370:
                     gamestate = "start"
                     lightSound.play()
+                    print("sound")
 
     if ev.type == pygame.KEYDOWN:  
         if ev.key == pygame.K_SPACE:  
@@ -188,7 +193,7 @@ while True:
 
         keys = pygame.key.get_pressed()
 
-        if lightsOut:
+        if lightsOut and speed > 0:
             if keys[pygame.K_a]:
                 angle+=3
                 FLTW -= 0.01
@@ -202,8 +207,10 @@ while True:
         yTravelled = round(speed * -math.sin(angleRadians) ,0)
         # End Reference #1
         
-        trackX += xTravelled
-        trackY += yTravelled
+        if -12142.0 < (trackX + xTravelled) < 0:
+            trackX += xTravelled
+        if -6347.0 < (trackY + yTravelled) < 0:
+            trackY += yTravelled
 
         if keys[pygame.K_1]:
             car =   Mclaren
@@ -240,23 +247,30 @@ while True:
             if speed > 0:
                 speed -= 0.1
 
-        if keys[pygame.K_w] and lightsOut:
+        if FLTW <= 0 or FRTW <= 0 or RLTW <= 0 or RRTW <= 0:
+            tyresintact = False
+
+        if keys[pygame.K_w] and lightsOut and tyresintact:
             if speed < maxSpeed:
                 speed += 0.1
             if RRTW >= 0 and RLTW >= 0:
-                RLTW -= 0.01
-                RRTW -= 0.01
+                if DRS:
+                    RLTW -= 0.02
+                    RRTW -= 0.02
+                else:
+                    RLTW -= 0.01
+                    RRTW -= 0.01
         else:
             if speed > 0:
                 speed -= 0.1
         
-
-        if DRS:
-            if keys[pygame.K_w] and speed < maxSpeed +5:
-                speed += 0.2
-        else:
-            if speed > maxSpeed:
-                speed -= 0.1
+        if tyresintact and lightsOut:
+            if DRS:
+                if keys[pygame.K_w] and speed < maxSpeed +5:
+                    speed += 0.2
+            else:
+                if speed > maxSpeed:
+                    speed -= 0.1
 
         if (round(trackX,0)) < -6600.0 and (round(trackX,0)) > -6650.0 and trackY > -6347 and trackY < -6034 and not crossing:
             lap += 1
@@ -276,7 +290,7 @@ while True:
 
 
         screen.blit(f1font2.render(("lap # " + str(lap)), True, (255, 255, 255)) , (20, 20)) 
-        screen.blit(f1font2.render((str(int(20*speed))) + " km/h", True, (255, 255, 255)) , (600, 20)) 
+        screen.blit(numberFont.render((str(int(20*speed))), True, (255, 255, 255)) , (600, 20)) 
         
         screen.blit(f1font2.render(("lap 1: " +str(lap1time)), True, ("white")) , (1050, 20))
         if lap2time > 0:
@@ -369,14 +383,18 @@ while True:
             
         if lights <= 3:
             lights += random.uniform(0.01, 0.02)
-        else:
+        elif lights < 99:
             lightsOut == True
+            if not pygame.mixer.music.get_busy():
+                awayWeGo.play()
+            lights = 100
 
 
         minimapX = trackX / -50 + 25
         minimapY = trackY / -50 + 560
         pygame.draw.circle(screen, (255,0,0),(minimapX,minimapY ), 7)
         speed = round(speed,1)
+
 
     mouseX, mouseY = pygame.mouse.get_pos()
 
@@ -396,7 +414,7 @@ while True:
 
         screen.blit(f1font.render('Settings', True, ("black")) , (440, 450)) 
         screen.blit(f1font.render('Race', True, ("black")) , (520, 290))
-        
+    print(trackX,trackY)
     pygame.display.flip()
     clock.tick(60)
 
