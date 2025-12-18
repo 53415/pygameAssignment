@@ -137,6 +137,9 @@ RRTWC = tyresG
 tyresintact = True
 i = 0
 
+trackLimitsWarning = 0
+pendingPenalty = False
+TimePenalty = 0
 gamestate = "main"
 
 # *********GAME LOOP**********
@@ -313,7 +316,9 @@ while True:
                     screen.blit(f1font2.render(("lap 2: " +str(lap2time)), True, (85, 26, 139)) , (1050, 50))
                 else:
                     screen.blit(f1font2.render(("lap 3: " +str(lap3time)), True, (85, 26, 139)) , (1050, 80))
-        
+
+        if TimePenalty > 0:
+            screen.blit(f1font2.render(("penalty: " + str(TimePenalty)), True, ("white")) , (1050, 250))
         
         if FLTW > 80:
             FLTWC = tyresG
@@ -398,6 +403,18 @@ while True:
 
     mouseX, mouseY = pygame.mouse.get_pos()
 
+    centerColor = screen.get_at((640, 360))
+    if centerColor != (0,0,0) and centerColor.r == 2 and centerColor.g == 96 and centerColor.b == 0:
+        pendingPenalty = True
+    if pendingPenalty == True and centerColor == (22,22,22):
+        if trackLimitsWarning < 3:
+            trackLimitsWarning += 1
+            print("track limits warning #" + str(trackLimitsWarning))
+        else:
+            TimePenalty += 3
+            pendingPenalty = False
+
+
     if gamestate == "main":
         screen.blit(menu, (0,0))
         fireworks.render(screen,(0,0))
@@ -414,7 +431,7 @@ while True:
 
         screen.blit(f1font.render('Settings', True, ("black")) , (440, 450)) 
         screen.blit(f1font.render('Race', True, ("black")) , (520, 290))
-    print(trackX,trackY)
+
     pygame.display.flip()
     clock.tick(60)
 
