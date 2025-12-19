@@ -7,8 +7,8 @@ Program Description:
 References:
 
 (put a link to your reference here but also add a comment in the code below where you used the reference)
-Reference #1: https://stackoverflow.com/questions/64774900/how-to-get-velocity-x-and-y-from-angle-and-speed
-
+reference #1 to move forward in the direction the car is facing: https://stackoverflow.com/questions/64774900/how-to-get-velocity-x-and-y-from-angle-and-speed
+reference #2 to find a point by the front wing to track if the car hits the wall: https://stackoverflow.com/questions/75268174/pygame-maintain-a-points-position-around-a-rotated-image?utm_source=chatgpt.com
 -----------------------------------------------------------------------------
 
 Additional Libraries/Extensions:
@@ -72,6 +72,7 @@ f1font2 = pygame.font.Font("f1font.ttf", 30)
 
 fireworks = gif_pygame.load("giphy.gif")
 
+#teams
 ferrari = pygame.image.load("ferrari.png")
 Mclaren = pygame.image.load("Mclaren.png")
 Redbull = pygame.image.load("Redbull.png")
@@ -83,14 +84,17 @@ Haas = pygame.image.load("Haas.png")
 Alpine = pygame.image.load("Alpine.png")
 Sauber = pygame.image.load("Sauber.png")
 
+#tyres wear colors
 tyresG = pygame.transform.scale(pygame.image.load("tyresG.png"), (60.5,90.5))
 tyresY = pygame.transform.scale(pygame.image.load("tyresY.png"), (60.5,90.5))
 tyresR = pygame.transform.scale(pygame.image.load("tyresR.png"), (60.5,90.5))
 tyres = tyresG
 
+#animated tyre images
 treads1 = pygame.image.load("treads1.png")
 treads2 = pygame.image.load("treads2.png")
 
+#starting race lights  countdown
 lights0 = pygame.transform.scale(pygame.image.load("lights0.png"), (520,560))
 lights1 = pygame.transform.scale(pygame.image.load("lights1.png"), (520,560))
 lights2 = pygame.transform.scale(pygame.image.load("lights2.png"), (520,560))
@@ -100,10 +104,11 @@ lights = -1
 lightsOut = False
 lightSound = pygame.mixer.Sound(os.path.join("lightSound.mp3"))
 awayWeGo = pygame.mixer.Sound(os.path.join("lightsout.mp3"))
-
 lightPlay = True
 
-car2 = pygame.image.load("car2.png")
+iAmStupid = pygame.mixer.Sound(os.path.join("iAmStupid.mp3"))
+carDRS = pygame.image.load("FerrariDRS.png")
+
 
 speed = 0
 trackX = -6685 
@@ -122,7 +127,8 @@ font = pygame.font.Font(os.path.join(script_dir, "font.otf"), 28)
 numberFont = pygame.font.Font(os.path.join(script_dir, "numbers.ttf"), 28)
 
 DRS = False
-carDRS = pygame.image.load("FerrariDRS.png")
+
+#tyrre wear starting values
 FLTW = 99
 FLTWC = tyresG
 
@@ -137,10 +143,16 @@ RRTWC = tyresG
 tyresintact = True
 i = 0
 
+#penalty variables
 trackLimitsWarning = 0
 pendingPenalty = False
 TimePenalty = 0
 gamestate = "main"
+
+#car sound effects
+carSound = pygame.mixer.Sound(os.path.join("engine.mp3"))
+carSound.set_volume(0)
+carSound.play(-1)
 
 # *********GAME LOOP**********
 while True:
@@ -192,7 +204,40 @@ while True:
     if gamestate == "start":
         # *********GAME LOGIC**********
         screen.blit(bahrainTrack, (trackX,trackY))
-        
+
+        #Reference #2
+        cx = 500 + 152 / 2
+        cy = 300 + 103 / 2
+
+        local_front = pygame.Vector2(-152/2, 0)
+        front_pos = pygame.Vector2(cx, cy) + local_front.rotate(-angle)
+        #End Reference #2
+
+        frontColor = screen.get_at((640, 360))
+        if frontColor == (127,127,127):
+            if DRS:
+                FLTW = 0
+                FRTW = 0
+                iAmStupid.play()
+                carSound.set_volume(0)
+
+            else:
+                FLTW -= 10
+                FRTW -= 10
+            speed = -5
+
+        centerColor = screen.get_at((640, 360))
+        if centerColor.r == 2 and centerColor.g == 96 and centerColor.b == 0:
+            pendingPenalty = True
+
+        if pendingPenalty == True and centerColor == (22,22,22):
+            if trackLimitsWarning < 3:
+                trackLimitsWarning += 1
+                print("track limits warning #" + str(trackLimitsWarning))
+            else:
+                TimePenalty += 3
+                pendingPenalty = False
+
 
         keys = pygame.key.get_pressed()
 
@@ -249,6 +294,7 @@ while True:
         if keys[pygame.K_s]:
             if speed > 0:
                 speed -= 0.1
+
 
         if FLTW <= 0 or FRTW <= 0 or RLTW <= 0 or RRTW <= 0:
             tyresintact = False
@@ -394,6 +440,8 @@ while True:
                 awayWeGo.play()
             lights = 100
 
+        carSound.set_volume(speed / maxSpeed * 0.5)
+        print(angle)
 
         minimapX = trackX / -50 + 25
         minimapY = trackY / -50 + 560
@@ -403,16 +451,6 @@ while True:
 
     mouseX, mouseY = pygame.mouse.get_pos()
 
-    centerColor = screen.get_at((640, 360))
-    if centerColor != (0,0,0) and centerColor.r == 2 and centerColor.g == 96 and centerColor.b == 0:
-        pendingPenalty = True
-    if pendingPenalty == True and centerColor == (22,22,22):
-        if trackLimitsWarning < 3:
-            trackLimitsWarning += 1
-            print("track limits warning #" + str(trackLimitsWarning))
-        else:
-            TimePenalty += 3
-            pendingPenalty = False
 
 
     if gamestate == "main":
